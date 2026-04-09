@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MEME TERMINAL 2026</title>
+    <title>MEME TERMINAL 2026 LOUD</title>
     <style>
         :root {
             --bg: #05070a;
@@ -57,6 +57,7 @@
             color: white;
             font-weight: bold;
             font-size: 14px;
+            cursor: pointer;
         }
 
         .grid {
@@ -81,6 +82,7 @@
             gap: 4px;
             min-height: 65px;
             justify-content: center;
+            cursor: pointer;
         }
 
         .btn-s:active { background: #374151; transform: scale(0.95); }
@@ -102,6 +104,7 @@
             font-weight: bold;
             margin-top: 10px;
             border: none;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -144,16 +147,42 @@
 <script>
     const synth = window.speechSynthesis;
     let plays = [];
+    
+    // Создаем аудио-контекст для усиления звука
+    let audioCtx;
+    let gainNode;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            gainNode = audioCtx.createGain();
+            // ГРОМКОСТЬ ТУТ: 1 - норма, 5 - очень громко
+            gainNode.gain.value = 5; 
+            gainNode.connect(audioCtx.destination);
+        }
+    }
 
     function ps(f) {
+        initAudio(); // Инициализация при первом клике
+        
         const a = new Audio(f);
+        // Пропускаем звук через усилитель
+        const source = audioCtx.createMediaElementSource(a);
+        source.connect(gainNode);
+        
         plays.push(a);
         a.play();
-        a.onended = () => plays = plays.filter(x => x !== a);
+        
+        a.onended = () => {
+            plays = plays.filter(x => x !== a);
+        };
     }
 
     function stopAll() {
-        plays.forEach(a => { a.pause(); a.currentTime = 0; });
+        plays.forEach(a => { 
+            a.pause(); 
+            a.currentTime = 0; 
+        });
         plays = [];
         synth.cancel();
     }
@@ -161,11 +190,20 @@
     function speak() {
         const t = document.getElementById('inp').value;
         if (!t.trim()) return;
+        
+        synth.cancel(); // Прервать текущую озвучку
         const u = new SpeechSynthesisUtterance(t);
+        
+        // Настройка громкости робота (макс 1)
+        u.volume = 1; 
+        
         const v = synth.getVoices();
         u.voice = v.find(x => x.lang.includes('ru')) || v[0];
         synth.speak(u);
     }
+
+    // Предзагрузка голосов для Chrome
+    window.speechSynthesis.getVoices();
 </script>
 
 </body>
